@@ -442,7 +442,6 @@ def build_full_html(body: str) -> str:
       line-height: 1.5;
     }}
     h1 {{
-      text-align: center;
       margin: 0 0 28px 0;
       font-size: 2rem;
       color: #343a40;
@@ -457,7 +456,7 @@ def build_full_html(body: str) -> str:
     .table-container {{
       overflow-x: auto;
       border-radius: 10px;
-      box-shadow: 0 4px 8px rgba(0,0,0,.06);
+      box-shadow: 0 4px 8px rgba(0,0,0,.3);
       background: var(--card);
       margin-bottom: 22px;
     }}
@@ -475,7 +474,7 @@ def build_full_html(body: str) -> str:
       white-space: nowrap;
     }}
     table.model-zoo-table thead th {{
-      background: var(--thead);
+      background: #c0c0c0;
       color: var(--muted);
       font-weight: 600;
       position: sticky;
@@ -483,7 +482,7 @@ def build_full_html(body: str) -> str:
       z-index: 1;
     }}
     table.model-zoo-table tbody tr:nth-of-type(even) {{
-      background-color: #fdfdfd;
+      background-color: #e6e6e0;
     }}
     table.model-zoo-table tbody tr:hover {{
       background-color: #f3f5f7;
