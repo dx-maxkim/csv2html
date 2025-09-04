@@ -556,7 +556,7 @@ def generate_model_zoo_html(csv_path: Path, html_path: Path, meta_path: Path | N
 def main():
     p = argparse.ArgumentParser(description="Generate DX Model Zoo-style HTML from CSV.")
     p.add_argument("--csv", type=Path, default=Path("sample.csv"), help="Input CSV file path")
-    p.add_argument("--out", type=Path, default=Path("model_zoo_grouped.html"), help="Output HTML file path")
+    p.add_argument("--out", type=Path, default=Path("output.html"), help="Output HTML file path")
     p.add_argument("--meta", type=Path, default=Path("meta.csv"), help="Metadata CSV file path")
     args = p.parse_args()
     generate_model_zoo_html(args.csv, args.out, args.meta)
