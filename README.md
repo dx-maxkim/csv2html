@@ -10,24 +10,29 @@
 
 ---
 
-## 스크립트 종류
+## 파일 설명
 
-1. **csv2html_pandas.py**
+1. **csv2html.py**
    - `pandas` 사용
-   - `DataFrame.to_html()` 기반
-   - 코드가 간결하고 유지보수 쉬움
+   - csv 인풋을 받아 html 로 변환해 주는 스크립트
+  
+2. **sample.csv**
+   - 아래 링크와 같이 개발팀에서 보내주는 excel 값을 csv 로 저장하여 input 으로 넣어주는 test sample
+   - https://docs.google.com/spreadsheets/d/1Z6bEzwrRK17XCYSvEc2veg_eAC-eTe4S/edit?gid=1374016918#gid=1374016918
 
-2. **csv2html_template.py**
-   - pandas로 데이터 처리 후 직접 HTML 템플릿 주입
-   - CSS/마크업 커스터마이징이 쉬움
-
+3. **meta.csv**
+   - 개발팀에서 공유해 주는 excel 에 각 모델 별 Input Res / Operations / Parameters 정보가 누락되어 임시로 참조하는 값
+   
 ---
 
-## 사용법
+## 사용법 (Example)
 
 ```bash
-python csv2html_pandas.py input.csv output.html
-python csv2html_template.py input.csv output.html
+# 아래와 같이 실행하면 default param 값이 적용됨 (--csv sample.csv --meta meta.csv --out output.html)
+python3 csv2html.py
+
+# 3가지 파라미터를 줄 수 있음
+python3 csv2html.py --csv sample.csv --meta meta.csv --out output.html
 ```
 
 ---
