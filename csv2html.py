@@ -100,13 +100,39 @@ LINK_TEXT_MAP = {"Source": "Source", "Compiled": "Compiled", "onnx": "onnx", "js
 
 def create_html_link(url: str, text: str) -> str:
     """
-    URL이 유효하면 HTML 앵커 태그를 생성, 아니면 빈 문자열.
+    URL과 링크 텍스트(종류)를 받아 적절한 아이콘이 포함된 HTML 앵커 태그를 생성한다.
+    - text가 'Source'이면 바로가기 아이콘, 그 외에는 다운로드 아이콘을 사용한다.
     """
-    if pd.notna(url) and isinstance(url, str):
-        u = url.strip()
-        if u.startswith("http://") or u.startswith("https://"):
-            return f'<a href="{u}" target="_blank" rel="noopener noreferrer">{text}</a>'
-    return ""
+    if not isinstance(url, str) or not url.strip():
+        return ""
+
+    # 1. "바로가기" 아이콘 (External Link) SVG 코드 ↗️
+    external_link_svg = """
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+       <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+       <polyline points="15 3 21 3 21 9"></polyline>
+       <line x1="10" y1="14" x2="21" y2="3"></line>
+    </svg>
+    """
+
+    # 2. "다운로드" 아이콘 SVG 코드 📥
+    download_svg = """
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <polyline points="7 10 12 15 17 10"></polyline>
+        <line x1="12" y1="15" x2="12" y2="3"></line>
+    </svg>
+    """
+
+    # 3. text 값에 따라 사용할 아이콘을 선택
+    icon_svg = ""
+    if text == "Source":
+        icon_svg = external_link_svg
+    else:
+        icon_svg = download_svg
+    
+    # 4. 최종 HTML 태그를 생성하여 반환
+    return f'<a href="{url}" target="_blank" rel="noopener noreferrer" title="{text}">{icon_svg.strip()}</a>'
 
 
 def get_metric_type(value) -> str:
