@@ -41,6 +41,6 @@ python3 csv2html.py --csv sample.csv --meta meta.csv --out output.html
 
 ```bash
 python3 -m venv .venv-csv2html
-source .venv-scv2html/bin/activate
+source .venv-csv2html/bin/activate
 pip install -r requirements.txt
 ```
