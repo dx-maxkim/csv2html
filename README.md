@@ -4,7 +4,6 @@
 특징은 다음과 같습니다:
 
 - `Task` 컬럼으로 섹션을 나눔 → 각 Task별 소제목(`<h2>`) + 테이블 출력
-- `Source`, `Compiled`, `onnx`, `json` 컬럼은 **짧은 링크 텍스트**(`source`, `compiled`, `onnx`, `json`)로 출력
 - 모든 행 텍스트는 **가운데 정렬**
 - HTML 출력 시 기본적인 CSS 스타일 적용
 
@@ -18,6 +17,7 @@
   
 2. **sample.csv**
    - 아래 링크와 같이 개발팀에서 보내주는 excel 값을 csv 로 저장하여 input 으로 넣어주는 test sample
+   - Table 의 첫번째 열의 table title 은 `Task` 로 변환 필요함
    - https://docs.google.com/spreadsheets/d/1Z6bEzwrRK17XCYSvEc2veg_eAC-eTe4S/edit?gid=1374016918#gid=1374016918
 
 3. **meta.csv**
