@@ -365,6 +365,11 @@ def normalize_and_process(df: pd.DataFrame, meta_path: Path | None = None) -> pd
         df["Name"] = "N/A"
     df["_match_key_"] = df["Name"].astype(str).map(_normalize_key)
 
+    if "License" in df.columns:
+        df["License"] = df["License"].fillna("Not Specified")
+        df.loc[df["License"].astype(str).str.strip() == "", "License"] = "Not Specified"
+
+
     # --- 외부 보강 파일이 있으면 Left Join ---
     if meta_path is not None:
         meta = load_meta(meta_path)
