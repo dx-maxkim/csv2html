@@ -73,8 +73,8 @@ COLUMN_ALIAS_MAP = {
     "Reference": "Source",
     "dxnn": "Compiled",
     "DXNN": "Compiled",
-    "onnx": "onnx",   # 타깃은 소문자 라벨
-    "json": "json",   # 타깃은 소문자 라벨
+    "onnx": "onnx", # 타깃은 소문자 라벨
+    "json": "json", # 타깃은 소문자 라벨
     "Model ID": "Name",
     # 그대로 쓰는 것들(있을 때만 rename; 없으면 건너뜀)
     "Dataset": "Dataset",
@@ -109,9 +109,9 @@ def create_html_link(url: str, text: str) -> str:
     # 1. "바로가기" 아이콘 (External Link) SVG 코드 ↗️
     external_link_svg = """
     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-       <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-       <polyline points="15 3 21 3 21 9"></polyline>
-       <line x1="10" y1="14" x2="21" y2="3"></line>
+        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+        <polyline points="15 3 21 3 21 9"></polyline>
+        <line x1="10" y1="14" x2="21" y2="3"></line>
     </svg>
     """
 
@@ -130,7 +130,7 @@ def create_html_link(url: str, text: str) -> str:
         icon_svg = external_link_svg
     else:
         icon_svg = download_svg
-    
+
     # 4. 최종 HTML 태그를 생성하여 반환
     return f'<a href="{url}" target="_blank" rel="noopener noreferrer" title="{text}">{icon_svg.strip()}</a>'
 
@@ -299,23 +299,58 @@ def _metric_accuracy_parsor(df: pd.DataFrame) -> pd.DataFrame:
         npu_str = str(row.get("NPU Accuracy", ""))
 
         # 그대로 유지 (단, 숫자만 남기고 Metric/세부 라벨 정리)
-        detail = get_metric_detail(raw_str)
         major = get_metric_type(raw_str)
-        new_metric = detail if detail in ("AP(Easy)", "AP(Medium)", "AP(Hard)") else major
         row = row.copy()
-        row["Metric"] = new_metric
-        if new_metric == "AP(Easy/Med/Hard)":
-            triple = extract_ap_triple_joined(raw_str)
-            row["Raw Accuracy"] = triple if triple else extract_primary_accuracy(raw_str)
-            triple = extract_ap_triple_joined(npu_str)
-            row["NPU Accuracy"] = triple if triple else extract_primary_accuracy(npu_str)
 
-        elif new_metric == "PSNR/SSIM":
-            pair = extract_psnr_ssim_joined(raw_str)
-            row["Raw Accuracy"] = pair if pair else extract_primary_accuracy(raw_str)
-            row["NPU Accuracy"] = pair if pair else extract_primary_accuracy(npu_str)
+        # Metric 컬럼을 딕셔너리 형태로 저장
+        if major == "AP(Easy/Med/Hard)":
+            row["Metric"] = {
+                "AP(Easy)": "",
+                "AP(Med)": "",
+                "AP(Hard)": ""
+            }
+        elif major == "PSNR/SSIM":
+            row["Metric"] = {
+                "PSNR": "",
+                "SSIM": ""
+            }
+        else:
+            row["Metric"] = major
+
+        if major == "AP(Easy/Med/Hard)":
+            # AP 값 3개를 분리
+            raw_vals = re.findall(r'(\d+\.\d+)', raw_str)
+            npu_vals = re.findall(r'(\d+\.\d+)', npu_str)
+
+            # HTML 포맷에 맞게 저장 (나중에 HTML 생성 함수에서 사용)
+            row["Raw Accuracy"] = {
+                "Easy": raw_vals[0] if len(raw_vals) > 0 else "",
+                "Medium": raw_vals[1] if len(raw_vals) > 1 else "",
+                "Hard": raw_vals[2] if len(raw_vals) > 2 else ""
+            }
+            row["NPU Accuracy"] = {
+                "Easy": npu_vals[0] if len(npu_vals) > 0 else "",
+                "Medium": npu_vals[1] if len(npu_vals) > 1 else "",
+                "Hard": npu_vals[2] if len(npu_vals) > 2 else ""
+            }
+
+        elif major == "PSNR/SSIM":
+            # PSNR/SSIM 값을 분리
+            raw_vals = re.findall(r'(\d+\.\d+)', raw_str)
+            npu_vals = re.findall(r'(\d+\.\d+)', npu_str)
+
+            # HTML 포맷에 맞게 저장
+            row["Raw Accuracy"] = {
+                "PSNR": raw_vals[0] if len(raw_vals) > 0 else "",
+                "SSIM": raw_vals[1] if len(raw_vals) > 1 else ""
+            }
+            row["NPU Accuracy"] = {
+                "PSNR": npu_vals[0] if len(npu_vals) > 0 else "",
+                "SSIM": npu_vals[1] if len(npu_vals) > 1 else ""
+            }
 
         else:
+            # 단일 값만 있는 경우 그대로 유지
             row["Raw Accuracy"] = extract_primary_accuracy(raw_str)
             row["NPU Accuracy"] = extract_primary_accuracy(npu_str)
         out_rows.append(row)
@@ -408,8 +443,8 @@ def normalize_and_process(df: pd.DataFrame, meta_path: Path | None = None) -> pd
             df[base_col] = df[base_col].where(df[base_col].astype(str).str.len() > 0, df[meta_col])
 
         _fill_if_empty("Input Resolution", "Input Resolution_meta")
-        _fill_if_empty("Operations",        "Operations_meta")
-        _fill_if_empty("Parameters",        "Parameters_meta")
+        _fill_if_empty("Operations",       "Operations_meta")
+        _fill_if_empty("Parameters",       "Parameters_meta")
 
         # 메타 컬럼은 정리
         df.drop(columns=[c for c in df.columns if c.endswith("_meta")], inplace=True)
@@ -417,6 +452,46 @@ def normalize_and_process(df: pd.DataFrame, meta_path: Path | None = None) -> pd
     # 8) 최종 컬럼 순서
     df = df[FINAL_COLUMNS]
     return df
+
+
+# --- 새롭게 추가된 HTML 테이블 생성 함수 ---
+def dataframe_to_html_table(df: pd.DataFrame) -> str:
+    """
+    DataFrame을 HTML 테이블 문자열로 변환 (커스텀 렌더링 포함)
+    """
+    headers = [f'<th>{col}</th>' for col in df.columns]
+    thead = f'<thead><tr>{"".join(headers)}</tr></thead>'
+    
+    tbody = []
+    for _, row in df.iterrows():
+        cells = []
+        for col_name in df.columns:
+            value = row[col_name]
+            cell_content = ""
+
+            # Metric, Raw Accuracy, NPU Accuracy 컬럼에 대한 특별 처리
+            if col_name in ["Metric", "Raw Accuracy", "NPU Accuracy"]:
+                if isinstance(value, dict):
+                    # 여러 값으로 구성된 딕셔너리인 경우, div로 분할하여 표시
+                    divs = []
+                    for key, val in value.items():
+                        if col_name == "Metric":
+                            divs.append(f'<div>{key}</div>')
+                        else:
+                            divs.append(f'<div>{val}</div>')
+                    cell_content = "".join(divs)
+                elif pd.notna(value):
+                    # 단일 값인 경우 그대로 표시
+                    cell_content = f'<div>{value}</div>'
+            else:
+                # 그 외 컬럼은 일반적인 처리
+                cell_content = str(value) if pd.notna(value) else ""
+
+            cells.append(f'<td>{cell_content}</td>')
+        tbody.append(f'<tr>{"".join(cells)}</tr>')
+    
+    tbody_html = f'<tbody>{"".join(tbody)}</tbody>'
+    return f'<table class="model-zoo-table">{thead}{tbody_html}</table>'
 
 
 def dataframe_grouped_html(df: pd.DataFrame) -> str:
@@ -428,16 +503,15 @@ def dataframe_grouped_html(df: pd.DataFrame) -> str:
     task_order = pd.Series(task_order).drop_duplicates().tolist() if task_order else ["Uncategorized Models"]
 
     for task in task_order:
-        sub = df[df["Task"] == task]
+        sub = df[df["Task"] == task].copy()
         if sub.empty:
             continue
         parts.append(f'<h2 class="task-title">{task}</h2>')
-        table_html = sub.to_html(
-            escape=False,
-            index=False,
-            classes="model-zoo-table",
-            na_rep=""
-        )
+        
+        # 'Task' 컬럼은 더 이상 필요 없으므로 드롭
+        sub.drop(columns=["Task"], inplace=True)
+        
+        table_html = dataframe_to_html_table(sub)
         parts.append(f'<div class="table-container">{table_html}</div>')
 
     return "\n".join(parts)
@@ -450,91 +524,102 @@ def build_full_html(body: str) -> str:
     return f"""<!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>DX Model Zoo</title>
-  <style>
-    :root {{
-      --bg: #f8f9fa;
-      --fg: #212529;
-      --muted: #495057;
-      --border: #dee2e6;
-      --accent: #0d6efd;
-      --card: #ffffff;
-      --thead: #e9ecef;
-    }}
-    * {{ box-sizing: border-box; }}
-    body {{
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      margin: 0;
-      padding: 24px;
-      background: var(--bg);
-      color: var(--fg);
-      line-height: 1.5;
-    }}
-    h1 {{
-      margin: 0 0 28px 0;
-      font-size: 2rem;
-      color: #343a40;
-    }}
-    h2.task-title {{
-      margin: 32px 0 12px 0;
-      font-size: 1.5rem;
-      color: #343a40;
-      padding-bottom: 6px;
-      border-bottom: 2px solid var(--border);
-    }}
-    .table-container {{
-      overflow-x: auto;
-      border-radius: 10px;
-      box-shadow: 0 4px 8px rgba(0,0,0,.3);
-      background: var(--card);
-      margin-bottom: 22px;
-    }}
-    table.model-zoo-table {{
-      border-collapse: collapse;
-      width: 100%;
-      font-size: 0.92rem;
-      table-layout: auto;
-    }}
-    table.model-zoo-table th, table.model-zoo-table td {{
-      border: 1px solid var(--border);
-      padding: 10px 12px;
-      text-align: center;
-      vertical-align: middle;
-      white-space: nowrap;
-    }}
-    table.model-zoo-table thead th {{
-      background: #c0c0c0;
-      color: var(--muted);
-      font-weight: 600;
-      position: sticky;
-      top: 0;
-      z-index: 1;
-    }}
-    table.model-zoo-table tbody tr:nth-of-type(even) {{
-      background-color: #e6e6e0;
-    }}
-    table.model-zoo-table tbody tr:hover {{
-      background-color: #f3f5f7;
-    }}
-    table.model-zoo-table a {{
-      text-decoration: none;
-      color: var(--accent);
-      font-weight: 500;
-    }}
-    table.model-zoo-table a:hover {{ text-decoration: underline; }}
-    @media (max-width: 768px) {{
-      table.model-zoo-table th, table.model-zoo-table td {{
-        padding: 8px 10px;
-        font-size: 0.88rem;
-      }}
-    }}
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>DX Model Zoo</title>
+    <style>
+        :root {{
+            --bg: #f8f9fa;
+            --fg: #212529;
+            --muted: #495057;
+            --border: #dee2e6;
+            --accent: #0d6efd;
+            --card: #ffffff;
+            --thead: #e9ecef;
+        }}
+        * {{ box-sizing: border-box; }}
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 24px;
+            background: var(--bg);
+            color: var(--fg);
+            line-height: 1.5;
+        }}
+        h1 {{
+            margin: 0 0 28px 0;
+            font-size: 2rem;
+            color: #343a40;
+        }}
+        h2.task-title {{
+            margin: 32px 0 12px 0;
+            font-size: 1.5rem;
+            color: #343a40;
+            padding-bottom: 6px;
+            border-bottom: 2px solid var(--border);
+        }}
+        .table-container {{
+            overflow-x: auto;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            background: var(--card);
+            margin-bottom: 22px;
+        }}
+        table.model-zoo-table {{
+            border-collapse: collapse;
+            width: 100%;
+            font-size: 0.92rem;
+            table-layout: auto;
+        }}
+        table.model-zoo-table th, table.model-zoo-table td {{
+            border: 1px solid var(--border);
+            padding: 10px 12px;
+            text-align: center;
+            vertical-align: middle;
+            white-space: nowrap;
+        }}
+        table.model-zoo-table thead th {{
+            background: #e9ecef;
+            color: #6c757d;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }}
+        table.model-zoo-table tbody tr:nth-of-type(even) {{
+            background-color: #f8f9fa;
+        }}
+        table.model-zoo-table tbody tr:hover {{
+            background-color: #f3f5f7;
+        }}
+        table.model-zoo-table a {{
+            text-decoration: none;
+            color: var(--accent);
+            font-weight: 500;
+        }}
+        table.model-zoo-table a:hover {{ text-decoration: underline; }}
+        table.model-zoo-table td {{
+            padding: 0;
+        }}
+        table.model-zoo-table td div {{
+            border-bottom: 1px solid var(--border);
+            padding: 10px 12px;
+            white-space: nowrap;
+        }}
+        table.model-zoo-table td div:last-child {{
+            border-bottom: none;
+        }}
+        @media (max-width: 768px) {{
+            table.model-zoo-table th, table.model-zoo-table td {{
+                padding: 8px 10px;
+                font-size: 0.88rem;
+            }}
+        }}
+    </style>
 </head>
 <body>
-  <h1>DX Model Zoo</h1>
-  {body}
+    <h1>DX Model Zoo</h1>
+    {body}
 </body>
 </html>
 """
@@ -564,4 +649,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
